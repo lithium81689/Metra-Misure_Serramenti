@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
+<title>Scheda Misurazioni — Serramenti</title>
+
+<!-- PWA / iOS home screen -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Misurazioni">
+<meta name="theme-color" content="#F6F4EE">
+<link id="appleIconLink" rel="apple-touch-icon" href="">
+<link id="faviconLink" rel="icon" href="">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F6F4EE;
+    --paper-dim:#EFEBDF;
+    --ink:#1E2A38;
+    --ink-soft:#5B6B7A;
+    --ink-faint:#8B96A3;
+    --blueprint:#2E5C8A;
+    --blueprint-dark:#1F4568;
+    --copper:#C1793C;
+    --line:#D8D3C4;
+    --line-dark:#C3BCA8;
+    --success:#4C7A5E;
+    --danger:#B44B3E;
+    --card:#FFFFFF;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'Inter',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    --radius:3px;
+    --safe-top:env(safe-area-inset-top,0px);
+    --safe-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:28px 28px;
+    background-attachment:fixed;
+    font-family:var(--font-body);
+    color:var(--ink);
+    min-height:100vh;
+    overscroll-behavior-y:none;
+  }
+  ::selection{background:var(--copper);color:#fff;}
+  button{font-family:var(--font-body);cursor:pointer;}
+  input,select,textarea{font-family:var(--font-body);}
+  a{color:inherit;}
+
+  /* ---------- layout ---------- */
+  #app{display:flex;min-height:100vh;}
+
+  .sidebar{
+    width:320px;
+    min-width:320px;
+    background:var(--paper-dim);
+    border-right:1.5px solid var(--line-dark);
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    position:sticky;
+    top:0;
+    padding-top:var(--safe-top);
+  }
+  .brand{
+    padding:22px 20px 16px;
+    border-bottom:1.5px solid var(--line-dark);
+  }
+  .brand .mark{
+    display:flex;align-items:center;gap:10px;
+  }
+  .brand .mark svg{flex-shrink:0;}
+  .brand h1{
+    font-family:var(--font-display);
+    font-size:17px;
+    font-weight:700;
+    margin:0;
+    letter-spacing:.2px;
+    color:var(--ink);
+  }
+  .brand .sub{
+    font-size:11px;
+    color:var(--ink-faint);
+    font-family:var(--font-mono);
+    margin-top:2px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+
+  .sidebar-toolbar{
+    padding:14px 16px 10px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .search-box{
+    display:flex;align-items:center;gap:8px;
+    background:var(--card);
+    border:1.5px solid var(--line-dark);
+    border-radius:var(--radius);
+    padding:8px 10px;
+  }
+  .search-box input{
+    border:none;outline:none;background:transparent;
+    font-size:13px;width:100%;color:var(--ink);
+  }
+  .search-box svg{flex-shrink:0;color:var(--ink-faint);}
+
+  .btn{
+    border:1.5px solid var(--ink);
+    background:var(--ink);
+    color:var(--paper);
+    font-size:13px;
+    font-weight:600;
+    padding:9px 14px;
+    border-radius:var(--radius);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    transition:transform .08s ease, background .15s ease;
+  }
+  .btn:hover{background:var(--blueprint-dark);border-color:var(--blueprint-dark);}
+  .btn:active{transform:translateY(1px);}
+  .btn-block{width:100%;}
+  .btn-ghost{
+    background:transparent;color:var(--ink);border-color:var(--line-dark);
+    font-weight:500;
+  }
+  .btn-ghost:hover{border-color:var(--ink);background:var(--card);}
+  .btn-danger{background:var(--danger);border-color:var(--danger);color:#fff;}
+  .btn-danger:hover{background:#8f3a30;border-color:#8f3a30;}
+  .btn-copper{background:var(--copper);border-color:var(--copper);color:#fff;}
+  .btn-copper:hover{background:#a5652c;border-color:#a5652c;}
+  .btn-sm{padding:6px 10px;font-size:12px;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+
+  .client-list{
+    flex:1;
+    overflow-y:auto;
+    padding:6px 12px 16px;
+  }
+  .client-item{
+    background:var(--card);
+    border:1.5px solid var(--line);
+    border-radius:var(--radius);
+    padding:11px 12px;
+    margin-bottom:8px;
+    cursor:pointer;
+    transition:border-color .12s ease, transform .08s ease;
+    position:relative;
+  }
+  .client-item:hover{border-color:var(--blueprint);}
+  .client-item.active{
+    border-color:var(--blueprint);
+    border-width:1.5px;
+    background:#EEF3F8;
+  }
+  .client-item.active::before{
+    content:"";
+    position:absolute;left:-1.5px;top:8px;bottom:8px;width:3px;
+    background:var(--blueprint);
+    border-radius:2px;
+  }
+  .client-item .name{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:14px;
+    margin:0 0 3px;
+    color:var(--ink);
+  }
+  .client-item .meta{
+    font-size:11px;
+    color:var(--ink-faint);
+    font-family:var(--font-mono);
+    display:flex;
+    justify-content:space-between;
+    gap:6px;
+  }
+  .empty-list{
+    text-align:center;
+    color:var(--ink-faint);
+    font-size:12.5px;
+    padding:30px 10px;
+    line-height:1.6;
+  }
+
+  .sidebar-footer{
+    padding:12px 16px calc(14px + var(--safe-bottom));
+    border-top:1.5px solid var(--line-dark);
+    display:flex;
+    gap:8px;
+  }
+  .sidebar-footer .btn{flex:1;}
+
+  /* ---------- main ---------- */
+  .main{
+    flex:1;
+    padding:calc(34px + var(--safe-top)) 44px calc(60px + var(--safe-bottom));
+    max-width:920px;
+  }
+  .main-empty{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    height:80vh;
+    text-align:center;
+    color:var(--ink-soft);
+  }
+  .main-empty svg{margin-bottom:18px;opacity:.55;}
+  .main-empty h2{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:19px;
+    margin:0 0 6px;
+    color:var(--ink);
+  }
+  .main-empty p{font-size:13.5px;color:var(--ink-faint);max-width:340px;margin:0;}
+
+  .client-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:16px;
+    padding-bottom:20px;
+    border-bottom:2px solid var(--ink);
+    margin-bottom:26px;
+    flex-wrap:wrap;
+  }
+  .client-header h2{
+    font-family:var(--font-display);
+    font-size:26px;
+    font-weight:700;
+    margin:0 0 8px;
+    color:var(--ink);
+  }
+  .client-header .badge-tag{
+    display:inline-block;
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    color:var(--ink-faint);
+    background:var(--paper-dim);
+    border:1px solid var(--line-dark);
+    padding:2px 7px;
+    border-radius:2px;
+    letter-spacing:.05em;
+    margin-bottom:10px;
+  }
+  .client-info-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:10px 26px;
+    margin-top:4px;
+  }
+  .info-field{font-size:13px;}
+  .info-field .lbl{
+    font-family:var(--font-mono);
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--ink-faint);
+    margin-bottom:3px;
+  }
+  .info-field .val{color:var(--ink);font-weight:500;}
+  .info-field .val.empty{color:var(--ink-faint);font-weight:400;font-style:italic;}
+  .client-header-actions{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;}
+
+  .section-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin:30px 0 14px;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .section-head h3{
+    font-family:var(--font-display);
+    font-size:15px;
+    font-weight:600;
+    margin:0;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .section-head h3 .count{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--ink-faint);
+    font-weight:400;
+  }
+
+  /* stanze chips */
+  .room-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px;}
+  .room-chip{
+    display:flex;align-items:center;gap:6px;
+    background:var(--card);
+    border:1.5px solid var(--line-dark);
+    border-radius:16px;
+    padding:6px 8px 6px 12px;
+    font-size:12.5px;
+    font-weight:500;
+  }
+  .room-chip .chip-actions{display:flex;gap:2px;}
+  .room-chip .icon-btn{padding:3px;}
+  .add-room-chip{
+    display:flex;align-items:center;gap:6px;
+    border:1.5px dashed var(--line-dark);
+    border-radius:16px;
+    padding:6px 12px;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    background:transparent;
+  }
+  .add-room-chip:hover{border-color:var(--blueprint);color:var(--blueprint);}
+
+  /* category grid */
+  .category-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:14px;
+    margin-top:6px;
+  }
+  .category-card{
+    background:var(--card);
+    border:1.5px solid var(--line-dark);
+    border-radius:var(--radius);
+    padding:18px 16px;
+    cursor:pointer;
+    transition:border-color .12s ease, transform .1s ease;
+    position:relative;
+    overflow:hidden;
+  }
+  .category-card:hover{border-color:var(--cat-color,var(--blueprint));transform:translateY(-2px);}
+  .category-card::before{
+    content:"";
+    position:absolute;top:0;left:0;right:0;height:4px;
+    background:var(--cat-color,var(--blueprint));
+  }
+  .category-card .icon-wrap{margin-bottom:10px;color:var(--cat-color,var(--blueprint));}
+  .category-card h4{
+    font-family:var(--font-display);
+    font-size:15px;font-weight:600;margin:0 0 4px;color:var(--ink);
+  }
+  .category-card .cat-count{
+    font-family:var(--font-mono);
+    font-size:12px;color:var(--ink-faint);
+  }
+
+  .back-link{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:13px;color:var(--ink-soft);
+    background:transparent;border:none;padding:4px 0;
+    margin-bottom:4px;font-weight:500;
+  }
+  .back-link:hover{color:var(--blueprint);}
+
+  .measure-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+    gap:12px;
+    margin-top:12px;
+  }
+  .measure-empty{
+    font-size:12.5px;
+    color:var(--ink-faint);
+    padding:16px 4px 6px;
+    font-style:italic;
+  }
+
+  /* measurement card w/ dimension drawing */
+  .m-card{
+    border:1.5px solid var(--line-dark);
+    border-radius:var(--radius);
+    background:#FEFEFC;
+    position:relative;
+    padding:12px 12px 10px;
+  }
+  .m-card::before, .m-card::after{
+    content:"";
+    position:absolute;width:9px;height:9px;
+    border-color:var(--ink-faint);
+    opacity:.55;
+  }
+  .m-card::before{top:-1.5px;left:-1.5px;border-top:1.5px solid;border-left:1.5px solid;}
+  .m-card::after{bottom:-1.5px;right:-1.5px;border-bottom:1.5px solid;border-right:1.5px solid;}
+  .m-card-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:6px;
+    gap:6px;
+  }
+  .m-room-badge{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    color:var(--ink-soft);
+    background:var(--paper-dim);
+    border:1px solid var(--line-dark);
+    padding:3px 7px;
+    border-radius:2px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width:120px;
+  }
+  .m-card-actions{display:flex;gap:2px;flex-shrink:0;}
+  .m-svg-wrap{
+    display:flex;justify-content:center;
+    padding:6px 0 4px;
+  }
+  .m-dims{
+    display:flex;
+    gap:12px;
+    justify-content:center;
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--ink);
+    margin-top:2px;
+    flex-wrap:wrap;
+  }
+  .m-dims span b{font-weight:600;}
+  .m-dims .dim-lbl{color:var(--ink-faint);font-size:10px;text-transform:uppercase;margin-right:3px;}
+  .m-apertura{
+    text-align:center;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:6px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+  }
+  .m-note{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin-top:8px;
+    padding-top:8px;
+    border-top:1px dashed var(--line-dark);
+    line-height:1.4;
+  }
+
+  /* ---------- modal ---------- */
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(30,42,56,.45);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:100;
+    padding:20px;
+  }
+  .overlay.show{display:flex;}
+  .modal{
+    background:var(--paper);
+    border:1.5px solid var(--ink);
+    border-radius:4px;
+    width:100%;
+    max-width:440px;
+    max-height:88vh;
+    overflow-y:auto;
+    box-shadow:6px 6px 0 rgba(30,42,56,.12);
+  }
+  .modal-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:16px 20px;
+    border-bottom:1.5px solid var(--line-dark);
+    position:sticky;top:0;background:var(--paper);
+  }
+  .modal-head h3{
+    font-family:var(--font-display);
+    font-size:16px;font-weight:700;margin:0;
+  }
+  .modal-body{padding:18px 20px 6px;}
+  .modal-foot{
+    padding:16px 20px 20px;
+    display:flex;
+    gap:10px;
+    justify-content:flex-end;
+    position:sticky;bottom:0;background:var(--paper);
+  }
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--ink-soft);
+    margin-bottom:5px;
+  }
+  .field input, .field select, .field textarea{
+    width:100%;
+    border:1.5px solid var(--line-dark);
+    border-radius:var(--radius);
+    padding:9px 10px;
+    font-size:13.5px;
+    color:var(--ink);
+    background:#fff;
+    outline:none;
+    transition:border-color .12s ease;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    border-color:var(--blueprint);
+  }
+  .field textarea{resize:vertical;min-height:60px;font-family:var(--font-body);}
+  .field-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  .field .unit-input{position:relative;}
+  .field .unit-input input{padding-right:32px;font-family:var(--font-mono);}
+  .field .unit-input span{
+    position:absolute;right:10px;top:50%;transform:translateY(-50%);
+    font-size:11px;color:var(--ink-faint);font-family:var(--font-mono);
+    pointer-events:none;
+  }
+  .hint{font-size:11px;color:var(--ink-faint);margin-top:4px;line-height:1.4;}
+  .seg-control{display:flex;gap:8px;}
+  .seg-btn{
+    flex:1;text-align:center;padding:9px 8px;
+    border:1.5px solid var(--line-dark);border-radius:var(--radius);
+    font-size:13px;font-weight:500;color:var(--ink-soft);
+    background:#fff;
+  }
+  .seg-btn.active{border-color:var(--blueprint);color:var(--blueprint);background:#EEF3F8;font-weight:600;}
+
+  .toast{
+    position:fixed;bottom:calc(20px + var(--safe-bottom));left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:var(--paper);
+    padding:10px 18px;border-radius:4px;
+    font-size:13px;font-family:var(--font-mono);
+    opacity:0;pointer-events:none;
+    transition:all .25s ease;
+    z-index:200;
+    box-shadow:0 4px 14px rgba(0,0,0,.2);
+    max-width:90vw;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* ---------- print / PDF area ---------- */
+  #printArea{display:none;}
+  @media print{
+    body{background:#fff;}
+    #app, .toast{display:none !important;}
+    #printArea{display:block !important;}
+    .print-page{padding:0 8mm;}
+    .print-header{border-bottom:2px solid #1E2A38;padding-bottom:12px;margin-bottom:18px;}
+    .print-header h1{font-family:'Space Grotesk',sans-serif;font-size:22px;margin:0 0 10px;}
+    .print-client-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:11px;font-family:'IBM Plex Mono',monospace;}
+    .print-client-grid .lbl{color:#5B6B7A;text-transform:uppercase;font-size:9px;letter-spacing:.05em;}
+    .print-room{margin-bottom:16px;page-break-inside:avoid;}
+    .print-room h2{font-family:'Space Grotesk',sans-serif;font-size:15px;border-bottom:1px solid #C3BCA8;padding-bottom:5px;margin:0 0 8px;}
+    .print-table{width:100%;border-collapse:collapse;font-size:11.5px;}
+    .print-table th{text-align:left;font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#5B6B7A;padding:4px 8px;border-bottom:1px solid #1E2A38;}
+    .print-table td{padding:6px 8px;border-bottom:1px solid #D8D3C4;vertical-align:top;}
+    .print-type-tag{display:inline-block;font-size:9.5px;font-family:'IBM Plex Mono',monospace;color:#fff;padding:2px 6px;border-radius:2px;}
+    .print-footer{margin-top:20px;font-size:9.5px;color:#8B96A3;font-family:'IBM Plex Mono',monospace;}
+  }
+
+  @media (max-width:820px){
+    #app{flex-direction:column;}
+    .sidebar{width:100%;min-width:0;height:auto;position:relative;max-height:46vh;}
+    .main{padding:20px 16px calc(50px + var(--safe-bottom));max-width:100%;}
+    .field-row{grid-template-columns:1fr;}
+    .client-info-grid{grid-template-columns:repeat(2,1fr);}
+  }
+
+  :focus-visible{outline:2px solid var(--blueprint);outline-offset:2px;}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+          <rect x="3" y="3" width="20" height="20" rx="1" stroke="#2E5C8A" stroke-width="1.6"/>
+          <path d="M3 9.5H23M9.5 3V23" stroke="#2E5C8A" stroke-width="1.2"/>
+          <path d="M1.5 6.5H4.5M1.5 3V6.5" stroke="#C1793C" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        <div>
+          <h1>Scheda Misurazioni</h1>
+          <div class="sub">Serramenti · Porte · Balconi</div>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-toolbar">
+      <button class="btn btn-block" id="btnNewClient">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1V13M1 7H13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Nuovo cliente
+      </button>
+      <div class="search-box">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M9.5 9.5L13 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <input type="text" id="searchInput" placeholder="Cerca cliente…">
+      </div>
+    </div>
+    <div class="client-list" id="clientList"></div>
+    <div class="sidebar-footer">
+      <button class="btn btn-ghost btn-sm" id="btnExport" title="Scarica un backup JSON di tutti i dati">Esporta backup</button>
+      <button class="btn btn-ghost btn-sm" id="btnImport" title="Ripristina da un file di backup">Importa backup</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none">
+    </div>
+  </aside>
+
+  <main class="main" id="mainArea"></main>
+</div>
+
+<!-- CLIENT MODAL -->
+<div class="overlay" id="clientOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="clientModalTitle">Nuovo cliente</h3>
+      <button class="icon-btn" onclick="closeModal('clientOverlay')">
+        <svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 2L14 14M14 2L2 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="cName">Nome e cognome *</label>
+        <input type="text" id="cName" placeholder="es. Mario Rossi">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="cDate">Data sopralluogo</label>
+          <input type="date" id="cDate">
+        </div>
+        <div class="field" style="grid-column:span 2;">
+          <label for="cPhone">Telefono</label>
+          <input type="tel" id="cPhone" placeholder="es. 333 1234567">
+        </div>
+      </div>
+      <div class="field">
+        <label for="cEmail">Email</label>
+        <input type="email" id="cEmail" placeholder="es. mario.rossi@email.it">
+      </div>
+      <div class="field">
+        <label for="cNotes">Note</label>
+        <textarea id="cNotes" placeholder="Indirizzo, indicazioni, richieste particolari…"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('clientOverlay')">Annulla</button>
+      <button class="btn" id="btnSaveClient">Salva cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- ROOM MODAL -->
+<div class="overlay" id="roomOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="roomModalTitle">Nuova stanza</h3>
+      <button class="icon-btn" onclick="closeModal('roomOverlay')">
+        <svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 2L14 14M14 2L2 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="rName">Nome stanza *</label>
+        <input type="text" id="rName" placeholder="es. Cucina, Camera 1, Soggiorno…">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('roomOverlay')">Annulla</button>
+      <button class="btn" id="btnSaveRoom">Salva stanza</button>
+    </div>
+  </div>
+</div>
+
+<!-- MEASUREMENT MODAL -->
+<div class="overlay" id="measureOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="measureModalTitle">Nuova misurazione</h3>
+      <button class="icon-btn" onclick="closeModal('measureOverlay')">
+        <svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 2L14 14M14 2L2 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="mType">Tipo elemento *</label>
+        <select id="mType" onchange="onMeasureTypeChange()">
+          <option value="finestra">Serramento (finestra)</option>
+          <option value="porta">Porta</option>
+          <option value="balcone">Balcone / porta-finestra</option>
+          <option value="serranda">Serranda</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="mRoom">Stanza *</label>
+        <select id="mRoom" onchange="onRoomSelectChange()">
+        </select>
+        <input type="text" id="mNewRoomName" placeholder="Nome della nuova stanza" style="margin-top:8px;display:none;">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="mWidth">Larghezza *</label>
+          <div class="unit-input"><input type="number" step="0.1" min="0" id="mWidth" placeholder="0.0"><span>cm</span></div>
+        </div>
+        <div class="field">
+          <label for="mHeight">Altezza *</label>
+          <div class="unit-input"><input type="number" step="0.1" min="0" id="mHeight" placeholder="0.0"><span>cm</span></div>
+        </div>
+        <div class="field">
+          <label for="mDepth">Profondità</label>
+          <div class="unit-input"><input type="number" step="0.1" min="0" id="mDepth" placeholder="0.0"><span>cm</span></div>
+        </div>
+      </div>
+      <div class="field" id="mAperturaField">
+        <label>Senso di apertura</label>
+        <div class="seg-control">
+          <button type="button" class="seg-btn" data-val="" onclick="setApertura('')">Non spec.</button>
+          <button type="button" class="seg-btn" data-val="sinistra" onclick="setApertura('sinistra')">Sinistra</button>
+          <button type="button" class="seg-btn" data-val="destra" onclick="setApertura('destra')">Destra</button>
+        </div>
+        <div class="hint" id="mAperturaHint"></div>
+      </div>
+      <div class="field">
+        <label for="mNotes">Note</label>
+        <textarea id="mNotes" placeholder="Materiale, colore, condizioni del vano…"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('measureOverlay')">Annulla</button>
+      <button class="btn" id="btnSaveMeasure">Salva misurazione</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE MODAL -->
+<div class="overlay" id="confirmOverlay">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-head">
+      <h3>Confermi l'eliminazione?</h3>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13.5px;color:var(--ink-soft);margin:0 0 6px;" id="confirmText">Questa azione non può essere annullata.</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('confirmOverlay')">Annulla</button>
+      <button class="btn btn-danger" id="btnConfirmDelete">Elimina</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Printable / PDF area (populated dynamically before window.print()) -->
+<div id="printArea"></div>
+
+<script>
+/* ============================================================
+   STATO & PERSISTENZA (localStorage — funziona solo fuori
+   dall'anteprima Claude.ai, una volta scaricato/ospitato il file)
+   ============================================================ */
+const STORAGE_KEY = 'infissi-app-clients-v2';
+let storageAvailable = true;
+
+let state = {
+  clients: [],
+  selectedClientId: null,
+  selectedCategory: null, // 'porta' | 'finestra' | 'balcone' | 'serranda' | null
+  search: '',
+  currentApertura: ''
+};
+
+const TYPE_META = {
+  finestra: { label:'Serramento', plural:'Serramenti', color:'#2E5C8A' },
+  porta:    { label:'Porta',       plural:'Porte',       color:'#5B6B7A' },
+  balcone:  { label:'Balcone',     plural:'Balconi',     color:'#C1793C' },
+  serranda: { label:'Serranda',    plural:'Serrande',    color:'#4C7A5E' }
+};
+const CATEGORY_ORDER = ['porta','finestra','balcone','serranda'];
+
+const CATEGORY_ICONS = {
+  porta: `<svg width="30" height="30" viewBox="0 0 30 30" fill="none"><rect x="7" y="3" width="16" height="24" rx="1" stroke="currentColor" stroke-width="1.6"/><circle cx="19.5" cy="15" r="1.1" fill="currentColor"/></svg>`,
+  finestra: `<svg width="30" height="30" viewBox="0 0 30 30" fill="none"><rect x="4" y="4" width="22" height="22" rx="1" stroke="currentColor" stroke-width="1.6"/><path d="M15 4V26M4 15H26" stroke="currentColor" stroke-width="1.3"/></svg>`,
+  balcone: `<svg width="30" height="30" viewBox="0 0 30 30" fill="none"><rect x="5" y="3" width="20" height="24" rx="1" stroke="currentColor" stroke-width="1.6"/><path d="M15 3V27" stroke="currentColor" stroke-width="1.3"/><circle cx="12" cy="15" r="1" fill="currentColor"/><circle cx="18" cy="15" r="1" fill="currentColor"/></svg>`,
+  serranda: `<svg width="30" height="30" viewBox="0 0 30 30" fill="none"><rect x="5" y="5" width="20" height="20" rx="1" stroke="currentColor" stroke-width="1.6"/><path d="M5 10H25M5 15H25M5 20H25" stroke="currentColor" stroke-width="1.2"/></svg>`
+};
+
+function uid(){
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+}
+
+function loadData(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw){
+      const parsed = JSON.parse(raw);
+      state.clients = parsed.clients || [];
+    }
+  }catch(e){
+    storageAvailable = false;
+    console.error('Storage non disponibile:', e);
+    showToast('Salvataggio locale non disponibile in questo contesto');
+  }
+  renderAll();
+}
+
+function saveData(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({clients: state.clients}));
+  }catch(e){
+    storageAvailable = false;
+    console.error('Errore salvataggio locale:', e);
+    showToast('Impossibile salvare in locale (spazio esaurito o accesso bloccato)');
+  }
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function getClient(id){ return state.clients.find(c=>c.id===id); }
+function fmtDate(d){
+  if(!d) return '';
+  const [y,m,day] = d.split('-');
+  if(!y||!m||!day) return d;
+  return `${day}/${m}/${y}`;
+}
+function fmtNum(n){
+  if (n===undefined || n===null || n==='') return '—';
+  const num = parseFloat(n);
+  if (isNaN(num)) return '—';
+  return (Math.round(num*10)/10).toString().replace('.',',');
+}
+function escapeHtml(str){
+  if(str===undefined||str===null) return '';
+  return String(str).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function aperturaLabel(v){
+  if (v==='destra') return 'Destra';
+  if (v==='sinistra') return 'Sinistra';
+  return 'Non specificato';
+}
+
+/* ============================================================
+   RENDER: SIDEBAR
+   ============================================================ */
+function renderClientList(){
+  const list = document.getElementById('clientList');
+  const q = state.search.trim().toLowerCase();
+  let clients = [...state.clients].sort((a,b)=> (b.createdAt||0) - (a.createdAt||0));
+  if (q){
+    clients = clients.filter(c => (c.nome||'').toLowerCase().includes(q));
+  }
+  if (clients.length===0){
+    list.innerHTML = `<div class="empty-list">${state.clients.length===0
+      ? 'Nessun cliente ancora.<br>Inizia aggiungendone uno.'
+      : 'Nessun cliente trovato.'}</div>`;
+    return;
+  }
+  list.innerHTML = clients.map(c=>{
+    const nRooms = c.rooms.length;
+    const nMeas = c.measurements.length;
+    return `
+      <div class="client-item ${c.id===state.selectedClientId?'active':''}" onclick="selectClient('${c.id}')">
+        <p class="name">${escapeHtml(c.nome)}</p>
+        <div class="meta">
+          <span>${nRooms} stanz${nRooms===1?'a':'e'} · ${nMeas} misur.</span>
+          <span>${fmtDate(c.data)}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   RENDER: MAIN AREA
+   ============================================================ */
+function renderMain(){
+  const main = document.getElementById('mainArea');
+  const client = getClient(state.selectedClientId);
+  if (!client){
+    main.innerHTML = `
+      <div class="main-empty">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <rect x="10" y="8" width="44" height="48" rx="2" stroke="#8B96A3" stroke-width="1.6"/>
+          <path d="M10 24H54M28 8V56" stroke="#8B96A3" stroke-width="1.2"/>
+          <path d="M17 16H21M17 12V16" stroke="#C1793C" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+        <h2>Nessun cliente selezionato</h2>
+        <p>Seleziona un cliente dall'elenco a sinistra, oppure creane uno nuovo per iniziare a registrare le misurazioni.</p>
+      </div>`;
+    return;
+  }
+
+  const header = renderClientHeader(client);
+
+  if (state.selectedCategory){
+    main.innerHTML = header + renderCategoryDetail(client, state.selectedCategory);
+  } else {
+    main.innerHTML = header + renderClientOverview(client);
+  }
+}
+
+function renderClientHeader(client){
+  return `
+    <div class="client-header">
+      <div>
+        <span class="badge-tag">Cliente</span>
+        <h2>${escapeHtml(client.nome)}</h2>
+        <div class="client-info-grid">
+          <div class="info-field"><div class="lbl">Data sopralluogo</div><div class="val ${!client.data?'empty':''}">${client.data?fmtDate(client.data):'non indicata'}</div></div>
+          <div class="info-field"><div class="lbl">Telefono</div><div class="val ${!client.telefono?'empty':''}">${client.telefono?escapeHtml(client.telefono):'non indicato'}</div></div>
+          <div class="info-field"><div class="lbl">Email</div><div class="val ${!client.email?'empty':''}">${client.email?escapeHtml(client.email):'non indicata'}</div></div>
+          ${client.note?`<div class="info-field" style="grid-column:1/-1;"><div class="lbl">Note</div><div class="val">${escapeHtml(client.note)}</div></div>`:''}
+        </div>
+      </div>
+      <div class="client-header-actions">
+        <button class="icon-btn" onclick="openClientModal('${client.id}')" title="Modifica cliente">
+          <svg width="17" height="17" viewBox="0 0 17 17" fill="none"><path d="M11.5 2.5L14.5 5.5L6 14H3V11L11.5 2.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="icon-btn danger" onclick="askDeleteClient('${client.id}')" title="Elimina cliente">
+          <svg width="17" height="17" viewBox="0 0 17 17" fill="none"><path d="M3 5H14M6.5 5V3.5H10.5V5M7 8V12M10 8V12M4.5 5L5 14H12L12.5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="downloadClientPDF('${client.id}')" title="Genera un PDF con tutte le stanze e misurazioni">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M3 1.5H8.5L11 4V12.5H3V1.5Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M8.5 1.5V4H11" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+          Scarica PDF
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function renderClientOverview(client){
+  const roomChips = client.rooms.map(r=>`
+    <div class="room-chip">
+      <span>${escapeHtml(r.nome)}</span>
+      <div class="chip-actions">
+        <button class="icon-btn" style="padding:2px" onclick="openRoomModal('${r.id}')" title="Rinomina">
+          <svg width="12" height="12" viewBox="0 0 17 17" fill="none"><path d="M11.5 2.5L14.5 5.5L6 14H3V11L11.5 2.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="icon-btn danger" style="padding:2px" onclick="askDeleteRoom('${r.id}')" title="Elimina">
+          <svg width="12" height="12" viewBox="0 0 17 17" fill="none"><path d="M3 5H14M6.5 5V3.5H10.5V5M7 8V12M10 8V12M4.5 5L5 14H12L12.5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+  `).join('');
+
+  const catCards = CATEGORY_ORDER.map(tipo=>{
+    const meta = TYPE_META[tipo];
+    const count = client.measurements.filter(m=>m.tipo===tipo).length;
+    return `
+      <div class="category-card" style="--cat-color:${meta.color}" onclick="openCategory('${tipo}')">
+        <div class="icon-wrap">${CATEGORY_ICONS[tipo]}</div>
+        <h4>${meta.plural}</h4>
+        <div class="cat-count">${count} misurazion${count===1?'e':'i'}</div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="section-head">
+      <h3>Stanze <span class="count">${client.rooms.length}</span></h3>
+    </div>
+    <div class="room-chips">
+      ${roomChips}
+      <button class="add-room-chip" onclick="openRoomModal()">+ Aggiungi stanza</button>
+    </div>
+
+    <div class="section-head">
+      <h3>Misurazioni per categoria</h3>
+      <button class="btn btn-copper btn-sm" onclick="openMeasureModal()">
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1V13M1 7H13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Nuova misurazione
+      </button>
+    </div>
+    <div class="category-grid">${catCards}</div>
+  `;
+}
+
+function renderCategoryDetail(client, tipo){
+  const meta = TYPE_META[tipo];
+  const measurements = client.measurements.filter(m=>m.tipo===tipo);
+  const roomsById = {};
+  client.rooms.forEach(r=>roomsById[r.id]=r.nome);
+
+  return `
+    <button class="back-link" onclick="closeCategory()">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M8.5 2L3.5 6.5L8.5 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Tutte le categorie
+    </button>
+    <div class="section-head">
+      <h3 style="color:${meta.color}">${meta.plural} <span class="count">${measurements.length}</span></h3>
+      <button class="btn btn-copper btn-sm" onclick="openMeasureModal('${tipo}')">
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1V13M1 7H13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Aggiungi ${meta.label.toLowerCase()}
+      </button>
+    </div>
+    ${measurements.length===0
+      ? `<div class="measure-empty">Nessuna misurazione di questo tipo registrata.</div>`
+      : `<div class="measure-grid">${measurements.map(m=>renderMeasureCard(client, m, roomsById[m.roomId])).join('')}</div>`}
+  `;
+}
+
+function renderMeasureCard(client, m, roomName){
+  const meta = TYPE_META[m.tipo];
+  return `
+    <div class="m-card">
+      <div class="m-card-top">
+        <span class="m-room-badge" title="${escapeHtml(roomName||'')}">${escapeHtml(roomName||'—')}</span>
+        <div class="m-card-actions">
+          <button class="icon-btn" style="padding:3px" onclick="openMeasureModal(null,'${m.id}')" title="Modifica">
+            <svg width="13" height="13" viewBox="0 0 17 17" fill="none"><path d="M11.5 2.5L14.5 5.5L6 14H3V11L11.5 2.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="icon-btn danger" style="padding:3px" onclick="askDeleteMeasure('${m.id}')" title="Elimina">
+            <svg width="13" height="13" viewBox="0 0 17 17" fill="none"><path d="M3 5H14M6.5 5V3.5H10.5V5M7 8V12M10 8V12M4.5 5L5 14H12L12.5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="m-svg-wrap">${dimensionSVG(m.larghezza, m.altezza, meta.color)}</div>
+      <div class="m-dims">
+        <span><span class="dim-lbl">L</span><b>${fmtNum(m.larghezza)}</b> cm</span>
+        <span><span class="dim-lbl">H</span><b>${fmtNum(m.altezza)}</b> cm</span>
+        <span><span class="dim-lbl">P</span><b>${fmtNum(m.profondita)}</b> cm</span>
+      </div>
+      ${m.tipo!=='serranda' ? `<div class="m-apertura">Apertura: <b>${aperturaLabel(m.apertura)}</b></div>` : ''}
+      ${m.note ? `<div class="m-note">${escapeHtml(m.note)}</div>` : ''}
+    </div>
+  `;
+}
+
+/* schematic dimension drawing (signature element) */
+function dimensionSVG(w, h, color){
+  const wv = parseFloat(w) || 1;
+  const hv = parseFloat(h) || 1;
+  const maxW = 110, maxH = 76;
+  const ratio = wv/hv;
+  let rw, rh;
+  if (ratio > maxW/maxH){ rw = maxW; rh = maxW/ratio; }
+  else { rh = maxH; rw = maxH*ratio; }
+  rw = Math.max(rw, 34); rh = Math.max(rh, 30);
+
+  const padTop = 18, padLeft = 26;
+  const totalW = padLeft + rw + 14;
+  const totalH = padTop + rh + 8;
+  const rx = padLeft, ry = padTop;
+
+  return `
+  <svg width="${totalW}" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}" style="overflow:visible">
+    <rect x="${rx}" y="${ry}" width="${rw}" height="${rh}" fill="none" stroke="${color}" stroke-width="1.4"/>
+    <line x1="${rx}" y1="${ry}" x2="${rx+rw}" y2="${ry+rh}" stroke="${color}" stroke-width=".6" stroke-dasharray="2,2" opacity=".4"/>
+    <line x1="${rx+rw}" y1="${ry}" x2="${rx}" y2="${ry+rh}" stroke="${color}" stroke-width=".6" stroke-dasharray="2,2" opacity=".4"/>
+    <line x1="${rx}" y1="8" x2="${rx+rw}" y2="8" stroke="#5B6B7A" stroke-width="1"/>
+    <line x1="${rx}" y1="4" x2="${rx}" y2="12" stroke="#5B6B7A" stroke-width="1"/>
+    <line x1="${rx+rw}" y1="4" x2="${rx+rw}" y2="12" stroke="#5B6B7A" stroke-width="1"/>
+    <line x1="10" y1="${ry}" x2="10" y2="${ry+rh}" stroke="#5B6B7A" stroke-width="1"/>
+    <line x1="6" y1="${ry}" x2="14" y2="${ry}" stroke="#5B6B7A" stroke-width="1"/>
+    <line x1="6" y1="${ry+rh}" x2="14" y2="${ry+rh}" stroke="#5B6B7A" stroke-width="1"/>
+  </svg>`;
+}
+
+function renderAll(){
+  renderClientList();
+  renderMain();
+}
+
+/* ============================================================
+   CATEGORY NAV
+   ============================================================ */
+function openCategory(tipo){
+  state.selectedCategory = tipo;
+  renderMain();
+}
+function closeCategory(){
+  state.selectedCategory = null;
+  renderMain();
+}
+
+/* ============================================================
+   MODAL CONTROL
+   ============================================================ */
+function openModal(id){ document.getElementById(id).classList.add('show'); }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+
+/* ---- CLIENT ---- */
+let editingClientId = null;
+function openClientModal(id){
+  editingClientId = id || null;
+  const c = id ? getClient(id) : null;
+  document.getElementById('clientModalTitle').textContent = c ? 'Modifica cliente' : 'Nuovo cliente';
+  document.getElementById('cName').value = c ? c.nome : '';
+  document.getElementById('cDate').value = c ? (c.data||'') : '';
+  document.getElementById('cPhone').value = c ? (c.telefono||'') : '';
+  document.getElementById('cEmail').value = c ? (c.email||'') : '';
+  document.getElementById('cNotes').value = c ? (c.note||'') : '';
+  openModal('clientOverlay');
+  setTimeout(()=>document.getElementById('cName').focus(), 50);
+}
+
+document.getElementById('btnSaveClient').addEventListener('click', ()=>{
+  const nome = document.getElementById('cName').value.trim();
+  if (!nome){ showToast('Il nome del cliente è obbligatorio'); document.getElementById('cName').focus(); return; }
+  const data = {
+    nome,
+    data: document.getElementById('cDate').value,
+    telefono: document.getElementById('cPhone').value.trim(),
+    email: document.getElementById('cEmail').value.trim(),
+    note: document.getElementById('cNotes').value.trim()
+  };
+  if (editingClientId){
+    const c = getClient(editingClientId);
+    Object.assign(c, data);
+  } else {
+    const newClient = {
+      id: uid(),
+      ...data,
+      createdAt: Date.now(),
+      rooms: [],
+      measurements: []
+    };
+    state.clients.push(newClient);
+    state.selectedClientId = newClient.id;
+    state.selectedCategory = null;
+  }
+  saveData();
+  renderAll();
+  closeModal('clientOverlay');
+  showToast('Cliente salvato');
+});
+
+function selectClient(id){
+  state.selectedClientId = id;
+  state.selectedCategory = null;
+  renderAll();
+}
+
+function askDeleteClient(id){
+  const c = getClient(id);
+  showConfirm(`Eliminare il cliente "${c.nome}" e tutte le stanze/misurazioni collegate?`, ()=>{
+    state.clients = state.clients.filter(cl=>cl.id!==id);
+    if (state.selectedClientId===id){ state.selectedClientId = null; state.selectedCategory = null; }
+    saveData();
+    renderAll();
+    showToast('Cliente eliminato');
+  });
+}
+
+/* ---- ROOM ---- */
+let editingRoomId = null;
+function openRoomModal(roomId){
+  editingRoomId = roomId || null;
+  const client = getClient(state.selectedClientId);
+  const room = roomId ? client.rooms.find(r=>r.id===roomId) : null;
+  document.getElementById('roomModalTitle').textContent = room ? 'Rinomina stanza' : 'Nuova stanza';
+  document.getElementById('rName').value = room ? room.nome : '';
+  openModal('roomOverlay');
+  setTimeout(()=>document.getElementById('rName').focus(), 50);
+}
+
+document.getElementById('btnSaveRoom').addEventListener('click', ()=>{
+  const nome = document.getElementById('rName').value.trim();
+  if (!nome){ showToast('Il nome della stanza è obbligatorio'); document.getElementById('rName').focus(); return; }
+  const client = getClient(state.selectedClientId);
+  if (editingRoomId){
+    const room = client.rooms.find(r=>r.id===editingRoomId);
+    room.nome = nome;
+  } else {
+    const newRoom = { id: uid(), nome };
+    client.rooms.push(newRoom);
+  }
+  saveData();
+  renderAll();
+  closeModal('roomOverlay');
+  showToast('Stanza salvata');
+});
+
+function askDeleteRoom(roomId){
+  const client = getClient(state.selectedClientId);
+  const room = client.rooms.find(r=>r.id===roomId);
+  const nMeas = client.measurements.filter(m=>m.roomId===roomId).length;
+  const warn = nMeas>0 ? ` Verranno eliminate anche ${nMeas} misurazioni associate.` : '';
+  showConfirm(`Eliminare la stanza "${room.nome}"?${warn}`, ()=>{
+    client.rooms = client.rooms.filter(r=>r.id!==roomId);
+    client.measurements = client.measurements.filter(m=>m.roomId!==roomId);
+    saveData();
+    renderAll();
+    showToast('Stanza eliminata');
+  });
+}
+
+/* ---- MEASUREMENT ---- */
+let editingMeasureId = null;
+
+function populateRoomSelect(selectedRoomId){
+  const client = getClient(state.selectedClientId);
+  const sel = document.getElementById('mRoom');
+  sel.innerHTML = client.rooms.map(r=>`<option value="${r.id}">${escapeHtml(r.nome)}</option>`).join('')
+    + `<option value="__new__">+ Nuova stanza…</option>`;
+  if (selectedRoomId) sel.value = selectedRoomId;
+  onRoomSelectChange();
+}
+
+function onRoomSelectChange(){
+  const sel = document.getElementById('mRoom');
+  const newInput = document.getElementById('mNewRoomName');
+  newInput.style.display = sel.value==='__new__' ? 'block' : 'none';
+  if (sel.value==='__new__') setTimeout(()=>newInput.focus(), 30);
+}
+
+function setApertura(val){
+  state.currentApertura = val;
+  document.querySelectorAll('#mAperturaField .seg-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.val===val);
+  });
+}
+
+function onMeasureTypeChange(){
+  const tipo = document.getElementById('mType').value;
+  const field = document.getElementById('mAperturaField');
+  const hint = document.getElementById('mAperturaHint');
+  if (tipo==='serranda'){
+    field.style.display = 'none';
+  } else {
+    field.style.display = 'block';
+    if (tipo==='porta'){
+      hint.textContent = "Vista entrando nella stanza (verso di apertura a spinta).";
+    } else {
+      hint.textContent = "Vista dall'interno della stanza (verso di apertura a tirare).";
+    }
+  }
+}
+
+function openMeasureModal(presetTipo, measureId){
+  const client = getClient(state.selectedClientId);
+  const m = measureId ? client.measurements.find(x=>x.id===measureId) : null;
+  editingMeasureId = m ? m.id : null;
+
+  document.getElementById('measureModalTitle').textContent = m ? 'Modifica misurazione' : 'Nuova misurazione';
+  document.getElementById('mType').value = m ? m.tipo : (presetTipo || 'finestra');
+  document.getElementById('mWidth').value = m ? m.larghezza : '';
+  document.getElementById('mHeight').value = m ? m.altezza : '';
+  document.getElementById('mDepth').value = m ? m.profondita : '';
+  document.getElementById('mNotes').value = m ? (m.note||'') : '';
+  document.getElementById('mNewRoomName').value = '';
+
+  if (client.rooms.length===0){
+    // forza la creazione di una stanza al volo
+    populateRoomSelect(null);
+    document.getElementById('mRoom').value = '__new__';
+    onRoomSelectChange();
+  } else {
+    populateRoomSelect(m ? m.roomId : client.rooms[0].id);
+  }
+
+  setApertura(m ? (m.apertura||'') : '');
+  onMeasureTypeChange();
+  openModal('measureOverlay');
+}
+
+document.getElementById('btnSaveMeasure').addEventListener('click', ()=>{
+  const larghezza = document.getElementById('mWidth').value;
+  const altezza = document.getElementById('mHeight').value;
+  if (larghezza==='' || altezza===''){
+    showToast('Larghezza e altezza sono obbligatorie');
+    return;
+  }
+  const client = getClient(state.selectedClientId);
+  let roomId = document.getElementById('mRoom').value;
+
+  if (roomId==='__new__'){
+    const newName = document.getElementById('mNewRoomName').value.trim();
+    if (!newName){ showToast('Indica il nome della nuova stanza'); document.getElementById('mNewRoomName').focus(); return; }
+    const newRoom = { id: uid(), nome: newName };
+    client.rooms.push(newRoom);
+    roomId = newRoom.id;
+  }
+
+  const tipo = document.getElementById('mType').value;
+  const data = {
+    tipo,
+    roomId,
+    larghezza: parseFloat(larghezza),
+    altezza: parseFloat(altezza),
+    profondita: document.getElementById('mDepth').value ? parseFloat(document.getElementById('mDepth').value) : null,
+    apertura: tipo==='serranda' ? '' : state.currentApertura,
+    note: document.getElementById('mNotes').value.trim()
+  };
+
+  if (editingMeasureId){
+    const m = client.measurements.find(x=>x.id===editingMeasureId);
+    Object.assign(m, data);
+  } else {
+    client.measurements.push({ id: uid(), ...data });
+  }
+
+  state.selectedCategory = tipo;
+  saveData();
+  renderAll();
+  closeModal('measureOverlay');
+  showToast('Misurazione salvata');
+});
+
+function askDeleteMeasure(measureId){
+  showConfirm('Eliminare questa misurazione?', ()=>{
+    const client = getClient(state.selectedClientId);
+    client.measurements = client.measurements.filter(m=>m.id!==measureId);
+    saveData();
+    renderAll();
+    showToast('Misurazione eliminata');
+  });
+}
+
+/* ---- CONFIRM ---- */
+let confirmAction = null;
+function showConfirm(text, onConfirm){
+  document.getElementById('confirmText').textContent = text;
+  confirmAction = onConfirm;
+  openModal('confirmOverlay');
+}
+document.getElementById('btnConfirmDelete').addEventListener('click', ()=>{
+  if (confirmAction) confirmAction();
+  confirmAction = null;
+  closeModal('confirmOverlay');
+});
+
+/* ============================================================
+   PDF (via stampa del browser)
+   ============================================================ */
+function downloadClientPDF(clientId){
+  const client = getClient(clientId);
+  const printArea = document.getElementById('printArea');
+
+  const roomsById = {};
+  client.rooms.forEach(r=>roomsById[r.id]=r.nome);
+  const byRoom = {};
+  client.measurements.forEach(m=>{
+    const key = m.roomId || '__none__';
+    if (!byRoom[key]) byRoom[key] = [];
+    byRoom[key].push(m);
+  });
+
+  const roomIds = client.rooms.map(r=>r.id).filter(id=>byRoom[id] && byRoom[id].length>0);
+  const roomsHtml = roomIds.length===0
+    ? `<p style="font-size:12px;color:#8B96A3;">Nessuna misurazione registrata.</p>`
+    : roomIds.map(rid=>{
+        const rows = byRoom[rid].map(m=>{
+          const meta = TYPE_META[m.tipo];
+          return `<tr>
+            <td><span class="print-type-tag" style="background:${meta.color}">${meta.label}</span></td>
+            <td>${fmtNum(m.larghezza)} cm</td>
+            <td>${fmtNum(m.altezza)} cm</td>
+            <td>${fmtNum(m.profondita)} cm</td>
+            <td>${m.tipo!=='serranda' ? aperturaLabel(m.apertura) : '—'}</td>
+            <td>${escapeHtml(m.note||'')}</td>
+          </tr>`;
+        }).join('');
+        return `
+          <div class="print-room">
+            <h2>${escapeHtml(roomsById[rid])}</h2>
+            <table class="print-table">
+              <thead><tr><th>Tipo</th><th>Larghezza</th><th>Altezza</th><th>Profondità</th><th>Apertura</th><th>Note</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        `;
+      }).join('');
+
+  const todayStr = new Date().toLocaleDateString('it-IT');
+
+  printArea.innerHTML = `
+    <div class="print-page">
+      <div class="print-header">
+        <h1>Scheda Misurazioni — ${escapeHtml(client.nome)}</h1>
+        <div class="print-client-grid">
+          <div><div class="lbl">Data sopralluogo</div>${client.data?fmtDate(client.data):'—'}</div>
+          <div><div class="lbl">Telefono</div>${escapeHtml(client.telefono||'—')}</div>
+          <div><div class="lbl">Email</div>${escapeHtml(client.email||'—')}</div>
+          <div><div class="lbl">Stanze / Misurazioni</div>${client.rooms.length} / ${client.measurements.length}</div>
+        </div>
+        ${client.note ? `<p style="font-size:11px;color:#5B6B7A;margin-top:10px;">${escapeHtml(client.note)}</p>` : ''}
+      </div>
+      ${roomsHtml}
+      <div class="print-footer">Generato il ${todayStr}</div>
+    </div>
+  `;
+
+  setTimeout(()=>window.print(), 60);
+}
+
+/* ============================================================
+   BACKUP EXPORT / IMPORT
+   ============================================================ */
+document.getElementById('btnExport').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify({clients: state.clients}, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'backup-misurazioni-' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast('Backup scaricato');
+});
+
+document.getElementById('btnImport').addEventListener('click', ()=>{
+  document.getElementById('importFile').click();
+});
+document.getElementById('importFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    try{
+      const parsed = JSON.parse(ev.target.result);
+      if (!parsed || !Array.isArray(parsed.clients)) throw new Error('formato non valido');
+      showConfirm(`Importare ${parsed.clients.length} client${parsed.clients.length===1?'e':'i'}? I dati attuali verranno sostituiti.`, ()=>{
+        state.clients = parsed.clients;
+        state.selectedClientId = null;
+        state.selectedCategory = null;
+        saveData();
+        renderAll();
+        showToast('Backup importato correttamente');
+      });
+    }catch(err){
+      showToast('File di backup non valido');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+/* ============================================================
+   ICONA APP (generata via canvas, nessun asset esterno)
+   ============================================================ */
+function generateAppIcon(){
+  const canvas = document.createElement('canvas');
+  canvas.width = 180; canvas.height = 180;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#F6F4EE'; ctx.fillRect(0,0,180,180);
+  ctx.strokeStyle = '#2E5C8A'; ctx.lineWidth = 9;
+  ctx.strokeRect(28,28,124,124);
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(28,90); ctx.lineTo(152,90);
+  ctx.moveTo(90,28); ctx.lineTo(90,152);
+  ctx.stroke();
+  ctx.strokeStyle = '#C1793C'; ctx.lineWidth = 6; ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(12,50); ctx.lineTo(12,18); ctx.lineTo(44,18);
+  ctx.stroke();
+  return canvas.toDataURL('image/png');
+}
+function setupIcons(){
+  try{
+    const url = generateAppIcon();
+    document.getElementById('appleIconLink').setAttribute('href', url);
+    document.getElementById('faviconLink').setAttribute('href', url);
+  }catch(e){ /* non bloccante */ }
+}
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+document.getElementById('btnNewClient').addEventListener('click', ()=>openClientModal());
+document.getElementById('searchInput').addEventListener('input', (e)=>{
+  state.search = e.target.value;
+  renderClientList();
+});
+
+document.querySelectorAll('.overlay').forEach(ov=>{
+  ov.addEventListener('click', (e)=>{ if (e.target===ov) closeModal(ov.id); });
+});
+document.addEventListener('keydown', (e)=>{
+  if (e.key==='Escape'){
+    document.querySelectorAll('.overlay.show').forEach(ov=>closeModal(ov.id));
+  }
+});
+
+/* ============================================================
+   INIT
+   ============================================================ */
+setupIcons();
+loadData();
+</script>
+</body>
+</html>
