@@ -449,6 +449,14 @@
     border-top:1px dashed var(--line-dark);
     line-height:1.4;
   }
+  .m-detail{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    text-align:center;
+    margin-top:6px;
+    line-height:1.45;
+  }
+  .m-detail b{color:var(--ink);font-weight:600;}
 
   /* ---------- modal ---------- */
   .overlay{
@@ -531,6 +539,26 @@
     background:#fff;
   }
   .seg-btn.active{border-color:var(--blueprint);color:var(--blueprint);background:#EEF3F8;font-weight:600;}
+  .checkbox-row{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    font-family:var(--font-body);
+    font-size:13.5px;
+    color:var(--ink);
+    background:#fff;
+    border:1.5px solid var(--line-dark);
+    border-radius:var(--radius);
+    padding:9px 10px;
+    cursor:pointer;
+  }
+  .checkbox-row input{width:auto;margin:0;accent-color:var(--blueprint);}
+  .conditional-panel{
+    margin-bottom:14px;
+    padding:10px 10px 0;
+    border:1px dashed var(--line-dark);
+    background:rgba(255,255,255,.45);
+  }
 
   .toast{
     position:fixed;bottom:calc(20px + var(--safe-bottom));left:50%;transform:translateX(-50%) translateY(20px);
@@ -589,7 +617,7 @@
         </svg>
         <div>
           <h1>Scheda Misurazioni</h1>
-          <div class="sub">Serramenti · Porte · Balconi</div>
+          <div class="sub">Serramenti · Porte · Balconi · Avvolgibili</div>
         </div>
       </div>
     </div>
@@ -689,10 +717,10 @@
       <div class="field">
         <label for="mType">Tipo elemento *</label>
         <select id="mType" onchange="onMeasureTypeChange()">
-          <option value="finestra">Serramento (finestra)</option>
+          <option value="finestra">Serramento</option>
           <option value="porta">Porta</option>
-          <option value="balcone">Balcone / porta-finestra</option>
-          <option value="serranda">Serranda</option>
+          <option value="balcone">Balcone</option>
+          <option value="serranda">Avvolgibile</option>
         </select>
       </div>
       <div class="field">
@@ -704,15 +732,73 @@
       <div class="field-row">
         <div class="field">
           <label for="mWidth">Larghezza *</label>
-          <div class="unit-input"><input type="number" step="0.1" min="0" id="mWidth" placeholder="0.0"><span>cm</span></div>
+          <div class="unit-input"><input type="number" step="1" min="0" id="mWidth" placeholder="0"><span>mm</span></div>
         </div>
         <div class="field">
           <label for="mHeight">Altezza *</label>
-          <div class="unit-input"><input type="number" step="0.1" min="0" id="mHeight" placeholder="0.0"><span>cm</span></div>
+          <div class="unit-input"><input type="number" step="1" min="0" id="mHeight" placeholder="0"><span>mm</span></div>
         </div>
         <div class="field">
           <label for="mDepth">Profondità</label>
-          <div class="unit-input"><input type="number" step="0.1" min="0" id="mDepth" placeholder="0.0"><span>cm</span></div>
+          <div class="unit-input"><input type="number" step="1" min="0" id="mDepth" placeholder="0"><span>mm</span></div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="mQuantity">Quantità *</label>
+          <input type="number" step="1" min="1" id="mQuantity" value="1" placeholder="1">
+        </div>
+        <div class="field" id="mAnteField" style="grid-column:span 2;">
+          <label for="mNumeroAnte">Numero ante</label>
+          <select id="mNumeroAnte">
+            <option value="1">1 anta</option>
+            <option value="2">2 ante</option>
+          </select>
+        </div>
+      </div>
+      <div id="mBalconeFields" class="conditional-panel" style="display:none;">
+        <div class="field-row">
+          <div class="field">
+            <label for="mBalconeElemento">Elemento balcone</label>
+            <select id="mBalconeElemento">
+              <option value="finestra">Finestra</option>
+              <option value="porta-finestra">Porta-Finestra</option>
+            </select>
+          </div>
+          <div class="field" style="grid-column:span 2;">
+            <label for="mBalconeTipologia">Tipologia balcone</label>
+            <select id="mBalconeTipologia">
+              <option value="Vicentina">Vicentina</option>
+              <option value="Padovana">Padovana</option>
+              <option value="Vic. Rovescia">Vic. Rovescia</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div id="mCassonettoWrap" class="conditional-panel" style="display:none;">
+        <label class="checkbox-row">
+          <input type="checkbox" id="mCassonettoPresente" onchange="toggleCassonettoDetails()">
+          <span>Cassonetto</span>
+        </label>
+        <div id="mCassonettoDetails" style="display:none;margin-top:10px;">
+          <div class="field-row">
+            <div class="field">
+              <label for="mCassWidth">Larghezza cassonetto</label>
+              <div class="unit-input"><input type="number" step="1" min="0" id="mCassWidth" placeholder="0"><span>mm</span></div>
+            </div>
+            <div class="field">
+              <label for="mCassHeight">Altezza cassonetto</label>
+              <div class="unit-input"><input type="number" step="1" min="0" id="mCassHeight" placeholder="0"><span>mm</span></div>
+            </div>
+            <div class="field">
+              <label for="mCassDepth">Profondità cassonetto</label>
+              <div class="unit-input"><input type="number" step="1" min="0" id="mCassDepth" placeholder="0"><span>mm</span></div>
+            </div>
+          </div>
+          <div class="field">
+            <label for="mCassNotes">Note cassonetto</label>
+            <textarea id="mCassNotes" placeholder="Note relative al cassonetto…"></textarea>
+          </div>
         </div>
       </div>
       <div class="field" id="mAperturaField">
@@ -768,7 +854,7 @@ let storageAvailable = true;
 let state = {
   clients: [],
   selectedClientId: null,
-  selectedCategory: null, // 'porta' | 'finestra' | 'balcone' | 'serranda' | null
+  selectedCategory: null, // 'porta' | 'finestra' | 'balcone' | 'serranda' (Avvolgibile) | null
   search: '',
   currentApertura: ''
 };
@@ -777,7 +863,7 @@ const TYPE_META = {
   finestra: { label:'Serramento', plural:'Serramenti', color:'#2E5C8A' },
   porta:    { label:'Porta',       plural:'Porte',       color:'#5B6B7A' },
   balcone:  { label:'Balcone',     plural:'Balconi',     color:'#C1793C' },
-  serranda: { label:'Serranda',    plural:'Serrande',    color:'#4C7A5E' }
+  serranda: { label:'Avvolgibile', plural:'Avvolgibili', color:'#4C7A5E' }
 };
 const CATEGORY_ORDER = ['porta','finestra','balcone','serranda'];
 
@@ -839,7 +925,36 @@ function fmtNum(n){
   if (n===undefined || n===null || n==='') return '—';
   const num = parseFloat(n);
   if (isNaN(num)) return '—';
-  return (Math.round(num*10)/10).toString().replace('.',',');
+  const rounded = Math.round(num*10)/10;
+  return (Number.isInteger(rounded) ? String(rounded) : rounded.toString()).replace('.',',');
+}
+function quantityVal(m){
+  const q = parseInt(m && (m.quantita || m.quantity || 1), 10);
+  return (!q || q < 1) ? 1 : q;
+}
+function readOptionalNumber(id){
+  const v = document.getElementById(id).value;
+  return v==='' ? null : parseFloat(v);
+}
+function balconeElementoLabel(v){
+  if (v==='porta-finestra') return 'Porta-Finestra';
+  if (v==='finestra') return 'Finestra';
+  return '';
+}
+function cassonettoText(c){
+  if (!c || !c.presente) return '';
+  return `L ${fmtNum(c.larghezza)} mm · H ${fmtNum(c.altezza)} mm · P ${fmtNum(c.profondita)} mm`;
+}
+function measureDetailsText(m){
+  const parts = [];
+  if (m.tipo==='finestra' && m.numeroAnte){
+    parts.push(`Ante: ${m.numeroAnte} ${String(m.numeroAnte)==='1' ? 'anta' : 'ante'}`);
+  }
+  if (m.tipo==='balcone'){
+    if (m.balconeElemento) parts.push(`Elemento: ${balconeElementoLabel(m.balconeElemento)}`);
+    if (m.balconeTipologia) parts.push(`Tipologia: ${m.balconeTipologia}`);
+  }
+  return parts.join(' · ');
 }
 function escapeHtml(str){
   if(str===undefined||str===null) return '';
@@ -1011,12 +1126,18 @@ function renderCategoryDetail(client, tipo){
 }
 
 function renderMeasureCard(client, m, roomName){
-  const meta = TYPE_META[m.tipo];
+  const meta = TYPE_META[m.tipo] || TYPE_META.finestra;
+  const details = measureDetailsText(m);
+  const cass = cassonettoText(m.cassonetto);
+  const cassNote = m.cassonetto && m.cassonetto.note ? m.cassonetto.note : '';
   return `
     <div class="m-card">
       <div class="m-card-top">
         <span class="m-room-badge" title="${escapeHtml(roomName||'')}">${escapeHtml(roomName||'—')}</span>
         <div class="m-card-actions">
+          <button class="icon-btn" style="padding:3px" onclick="duplicateMeasure('${m.id}')" title="Duplica misurazione">
+            <svg width="13" height="13" viewBox="0 0 17 17" fill="none"><rect x="5" y="3" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.3"/><path d="M4 6H3.5C2.7 6 2 6.7 2 7.5V13.5C2 14.3 2.7 15 3.5 15H9.5C10.3 15 11 14.3 11 13.5V13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </button>
           <button class="icon-btn" style="padding:3px" onclick="openMeasureModal(null,'${m.id}')" title="Modifica">
             <svg width="13" height="13" viewBox="0 0 17 17" fill="none"><path d="M11.5 2.5L14.5 5.5L6 14H3V11L11.5 2.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
           </button>
@@ -1025,20 +1146,23 @@ function renderMeasureCard(client, m, roomName){
           </button>
         </div>
       </div>
-      <div class="m-svg-wrap">${dimensionSVG(m.larghezza, m.altezza, meta.color)}</div>
+      <div class="m-svg-wrap">${dimensionSVG(m.larghezza, m.altezza, meta.color, m.apertura, m.tipo)}</div>
       <div class="m-dims">
-        <span><span class="dim-lbl">L</span><b>${fmtNum(m.larghezza)}</b> cm</span>
-        <span><span class="dim-lbl">H</span><b>${fmtNum(m.altezza)}</b> cm</span>
-        <span><span class="dim-lbl">P</span><b>${fmtNum(m.profondita)}</b> cm</span>
+        <span><span class="dim-lbl">Q.tà</span><b>${quantityVal(m)}</b></span>
+        <span><span class="dim-lbl">L</span><b>${fmtNum(m.larghezza)}</b> mm</span>
+        <span><span class="dim-lbl">H</span><b>${fmtNum(m.altezza)}</b> mm</span>
+        <span><span class="dim-lbl">P</span><b>${fmtNum(m.profondita)}</b> mm</span>
       </div>
+      ${details ? `<div class="m-detail">${escapeHtml(details)}</div>` : ''}
       ${m.tipo!=='serranda' ? `<div class="m-apertura">Apertura: <b>${aperturaLabel(m.apertura)}</b></div>` : ''}
+      ${cass ? `<div class="m-note"><b>Cassonetto:</b> ${escapeHtml(cass)}${cassNote ? `<br>${escapeHtml(cassNote)}` : ''}</div>` : ''}
       ${m.note ? `<div class="m-note">${escapeHtml(m.note)}</div>` : ''}
     </div>
   `;
 }
 
 /* schematic dimension drawing (signature element) */
-function dimensionSVG(w, h, color){
+function dimensionSVG(w, h, color, apertura, tipo){
   const wv = parseFloat(w) || 1;
   const hv = parseFloat(h) || 1;
   const maxW = 110, maxH = 76;
@@ -1052,12 +1176,30 @@ function dimensionSVG(w, h, color){
   const totalW = padLeft + rw + 14;
   const totalH = padTop + rh + 8;
   const rx = padLeft, ry = padTop;
+  let openingMark = '';
+
+  if (tipo==='serranda'){
+    const y1 = ry + rh*.25;
+    const y2 = ry + rh*.50;
+    const y3 = ry + rh*.75;
+    openingMark = `
+      <line x1="${rx+4}" y1="${y1}" x2="${rx+rw-4}" y2="${y1}" stroke="${color}" stroke-width=".8" opacity=".45"/>
+      <line x1="${rx+4}" y1="${y2}" x2="${rx+rw-4}" y2="${y2}" stroke="${color}" stroke-width=".8" opacity=".45"/>
+      <line x1="${rx+4}" y1="${y3}" x2="${rx+rw-4}" y2="${y3}" stroke="${color}" stroke-width=".8" opacity=".45"/>`;
+  } else if (apertura==='sinistra'){
+    // Richiesto: apertura sinistra = |>|, bordi verticali + tratteggio a >
+    openingMark = `<path d="M ${rx+5} ${ry+5} L ${rx+rw-5} ${ry+rh/2} L ${rx+5} ${ry+rh-5}" fill="none" stroke="${color}" stroke-width="1" stroke-dasharray="3,3" opacity=".85"/>`;
+  } else if (apertura==='destra'){
+    // Richiesto: apertura destra = |<|, bordi verticali + tratteggio a <
+    openingMark = `<path d="M ${rx+rw-5} ${ry+5} L ${rx+5} ${ry+rh/2} L ${rx+rw-5} ${ry+rh-5}" fill="none" stroke="${color}" stroke-width="1" stroke-dasharray="3,3" opacity=".85"/>`;
+  }
 
   return `
   <svg width="${totalW}" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}" style="overflow:visible">
     <rect x="${rx}" y="${ry}" width="${rw}" height="${rh}" fill="none" stroke="${color}" stroke-width="1.4"/>
-    <line x1="${rx}" y1="${ry}" x2="${rx+rw}" y2="${ry+rh}" stroke="${color}" stroke-width=".6" stroke-dasharray="2,2" opacity=".4"/>
-    <line x1="${rx+rw}" y1="${ry}" x2="${rx}" y2="${ry+rh}" stroke="${color}" stroke-width=".6" stroke-dasharray="2,2" opacity=".4"/>
+    <line x1="${rx+3}" y1="${ry}" x2="${rx+3}" y2="${ry+rh}" stroke="${color}" stroke-width=".7" opacity=".55"/>
+    <line x1="${rx+rw-3}" y1="${ry}" x2="${rx+rw-3}" y2="${ry+rh}" stroke="${color}" stroke-width=".7" opacity=".55"/>
+    ${openingMark}
     <line x1="${rx}" y1="8" x2="${rx+rw}" y2="8" stroke="#5B6B7A" stroke-width="1"/>
     <line x1="${rx}" y1="4" x2="${rx}" y2="12" stroke="#5B6B7A" stroke-width="1"/>
     <line x1="${rx+rw}" y1="4" x2="${rx+rw}" y2="12" stroke="#5B6B7A" stroke-width="1"/>
@@ -1222,20 +1364,40 @@ function setApertura(val){
   });
 }
 
+function toggleCassonettoDetails(){
+  const checked = document.getElementById('mCassonettoPresente').checked;
+  document.getElementById('mCassonettoDetails').style.display = checked ? 'block' : 'none';
+}
+
 function onMeasureTypeChange(){
   const tipo = document.getElementById('mType').value;
   const field = document.getElementById('mAperturaField');
   const hint = document.getElementById('mAperturaHint');
+  const anteField = document.getElementById('mAnteField');
+  const cassWrap = document.getElementById('mCassonettoWrap');
+  const balconeFields = document.getElementById('mBalconeFields');
+
+  anteField.style.display = tipo==='finestra' ? 'block' : 'none';
+  cassWrap.style.display = tipo==='finestra' ? 'block' : 'none';
+  balconeFields.style.display = tipo==='balcone' ? 'block' : 'none';
+
   if (tipo==='serranda'){
     field.style.display = 'none';
   } else {
     field.style.display = 'block';
     if (tipo==='porta'){
       hint.textContent = "Vista entrando nella stanza (verso di apertura a spinta).";
+    } else if (tipo==='balcone'){
+      hint.textContent = "Vista dall'interno della stanza. Il disegno usa |>| per apertura sinistra e |<| per apertura destra.";
     } else {
-      hint.textContent = "Vista dall'interno della stanza (verso di apertura a tirare).";
+      hint.textContent = "Vista dall'interno della stanza. Il disegno usa |>| per apertura sinistra e |<| per apertura destra.";
     }
   }
+
+  if (tipo!=='finestra'){
+    document.getElementById('mCassonettoPresente').checked = false;
+  }
+  toggleCassonettoDetails();
 }
 
 function openMeasureModal(presetTipo, measureId){
@@ -1247,9 +1409,20 @@ function openMeasureModal(presetTipo, measureId){
   document.getElementById('mType').value = m ? m.tipo : (presetTipo || 'finestra');
   document.getElementById('mWidth').value = m ? m.larghezza : '';
   document.getElementById('mHeight').value = m ? m.altezza : '';
-  document.getElementById('mDepth').value = m ? m.profondita : '';
+  document.getElementById('mDepth').value = m ? (m.profondita || '') : '';
+  document.getElementById('mQuantity').value = m ? quantityVal(m) : 1;
+  document.getElementById('mNumeroAnte').value = m && m.numeroAnte ? String(m.numeroAnte) : '1';
+  document.getElementById('mBalconeElemento').value = m && m.balconeElemento ? m.balconeElemento : 'finestra';
+  document.getElementById('mBalconeTipologia').value = m && m.balconeTipologia ? m.balconeTipologia : 'Vicentina';
   document.getElementById('mNotes').value = m ? (m.note||'') : '';
   document.getElementById('mNewRoomName').value = '';
+
+  const cass = m && m.cassonetto ? m.cassonetto : null;
+  document.getElementById('mCassonettoPresente').checked = !!(cass && cass.presente);
+  document.getElementById('mCassWidth').value = cass && cass.larghezza ? cass.larghezza : '';
+  document.getElementById('mCassHeight').value = cass && cass.altezza ? cass.altezza : '';
+  document.getElementById('mCassDepth').value = cass && cass.profondita ? cass.profondita : '';
+  document.getElementById('mCassNotes').value = cass ? (cass.note||'') : '';
 
   if (client.rooms.length===0){
     // forza la creazione di una stanza al volo
@@ -1268,8 +1441,14 @@ function openMeasureModal(presetTipo, measureId){
 document.getElementById('btnSaveMeasure').addEventListener('click', ()=>{
   const larghezza = document.getElementById('mWidth').value;
   const altezza = document.getElementById('mHeight').value;
+  const quantita = parseInt(document.getElementById('mQuantity').value, 10);
   if (larghezza==='' || altezza===''){
     showToast('Larghezza e altezza sono obbligatorie');
+    return;
+  }
+  if (!quantita || quantita < 1){
+    showToast('La quantità deve essere almeno 1');
+    document.getElementById('mQuantity').focus();
     return;
   }
   const client = getClient(state.selectedClientId);
@@ -1284,13 +1463,25 @@ document.getElementById('btnSaveMeasure').addEventListener('click', ()=>{
   }
 
   const tipo = document.getElementById('mType').value;
+  const cassonettoPresente = tipo==='finestra' && document.getElementById('mCassonettoPresente').checked;
   const data = {
     tipo,
     roomId,
     larghezza: parseFloat(larghezza),
     altezza: parseFloat(altezza),
-    profondita: document.getElementById('mDepth').value ? parseFloat(document.getElementById('mDepth').value) : null,
+    profondita: readOptionalNumber('mDepth'),
+    quantita,
+    numeroAnte: tipo==='finestra' ? parseInt(document.getElementById('mNumeroAnte').value, 10) : null,
     apertura: tipo==='serranda' ? '' : state.currentApertura,
+    balconeElemento: tipo==='balcone' ? document.getElementById('mBalconeElemento').value : null,
+    balconeTipologia: tipo==='balcone' ? document.getElementById('mBalconeTipologia').value : null,
+    cassonetto: cassonettoPresente ? {
+      presente: true,
+      larghezza: readOptionalNumber('mCassWidth'),
+      altezza: readOptionalNumber('mCassHeight'),
+      profondita: readOptionalNumber('mCassDepth'),
+      note: document.getElementById('mCassNotes').value.trim()
+    } : { presente: false },
     note: document.getElementById('mNotes').value.trim()
   };
 
@@ -1298,7 +1489,7 @@ document.getElementById('btnSaveMeasure').addEventListener('click', ()=>{
     const m = client.measurements.find(x=>x.id===editingMeasureId);
     Object.assign(m, data);
   } else {
-    client.measurements.push({ id: uid(), ...data });
+    client.measurements.push({ id: uid(), createdAt: Date.now(), ...data });
   }
 
   state.selectedCategory = tipo;
@@ -1307,6 +1498,20 @@ document.getElementById('btnSaveMeasure').addEventListener('click', ()=>{
   closeModal('measureOverlay');
   showToast('Misurazione salvata');
 });
+
+function duplicateMeasure(measureId){
+  const client = getClient(state.selectedClientId);
+  const idx = client.measurements.findIndex(m=>m.id===measureId);
+  if (idx===-1) return;
+  const copy = JSON.parse(JSON.stringify(client.measurements[idx]));
+  copy.id = uid();
+  copy.createdAt = Date.now();
+  client.measurements.splice(idx+1, 0, copy);
+  state.selectedCategory = copy.tipo;
+  saveData();
+  renderAll();
+  showToast('Misurazione duplicata');
+}
 
 function askDeleteMeasure(measureId){
   showConfirm('Eliminare questa misurazione?', ()=>{
@@ -1352,13 +1557,19 @@ function downloadClientPDF(clientId){
     ? `<p style="font-size:12px;color:#8B96A3;">Nessuna misurazione registrata.</p>`
     : roomIds.map(rid=>{
         const rows = byRoom[rid].map(m=>{
-          const meta = TYPE_META[m.tipo];
+          const meta = TYPE_META[m.tipo] || TYPE_META.finestra;
+          const details = measureDetailsText(m);
+          const cass = cassonettoText(m.cassonetto);
+          const cassNote = m.cassonetto && m.cassonetto.note ? ` — ${m.cassonetto.note}` : '';
           return `<tr>
             <td><span class="print-type-tag" style="background:${meta.color}">${meta.label}</span></td>
-            <td>${fmtNum(m.larghezza)} cm</td>
-            <td>${fmtNum(m.altezza)} cm</td>
-            <td>${fmtNum(m.profondita)} cm</td>
+            <td>${quantityVal(m)}</td>
+            <td>${fmtNum(m.larghezza)} mm</td>
+            <td>${fmtNum(m.altezza)} mm</td>
+            <td>${fmtNum(m.profondita)} mm</td>
             <td>${m.tipo!=='serranda' ? aperturaLabel(m.apertura) : '—'}</td>
+            <td>${details ? escapeHtml(details) : '—'}</td>
+            <td>${cass ? escapeHtml(cass + cassNote) : '—'}</td>
             <td>${escapeHtml(m.note||'')}</td>
           </tr>`;
         }).join('');
@@ -1366,7 +1577,7 @@ function downloadClientPDF(clientId){
           <div class="print-room">
             <h2>${escapeHtml(roomsById[rid])}</h2>
             <table class="print-table">
-              <thead><tr><th>Tipo</th><th>Larghezza</th><th>Altezza</th><th>Profondità</th><th>Apertura</th><th>Note</th></tr></thead>
+              <thead><tr><th>Tipo</th><th>Q.tà</th><th>Larghezza</th><th>Altezza</th><th>Profondità</th><th>Apertura</th><th>Dettagli</th><th>Cassonetto</th><th>Note</th></tr></thead>
               <tbody>${rows}</tbody>
             </table>
           </div>
