@@ -61,8 +61,10 @@
   #app{display:flex;min-height:100vh;}
 
   .sidebar{
-    width:320px;
-    min-width:320px;
+    width:380px;
+    min-width:300px;
+    max-width:620px;
+    flex:0 0 auto;
     background:var(--paper-dim);
     border-right:1.5px solid var(--line-dark);
     display:flex;
@@ -149,6 +151,36 @@
     flex:1;
     overflow-y:auto;
     padding:6px 12px 16px;
+    min-height:260px;
+  }
+
+  .sidebar-resizer{
+    position:absolute;
+    top:0;
+    right:-5px;
+    bottom:0;
+    width:10px;
+    cursor:col-resize;
+    z-index:30;
+    touch-action:none;
+  }
+  .sidebar-resizer::after{
+    content:"";
+    position:absolute;
+    top:50%;
+    right:3px;
+    width:3px;
+    height:54px;
+    transform:translateY(-50%);
+    border-radius:3px;
+    background:var(--line-dark);
+    opacity:.65;
+    transition:background .15s ease, opacity .15s ease;
+  }
+  .sidebar-resizer:hover::after,
+  .sidebar-resizer.dragging::after{
+    background:var(--blueprint);
+    opacity:1;
   }
   .client-item{
     background:var(--card);
@@ -607,7 +639,19 @@
 
   @media (max-width:820px){
     #app{flex-direction:column;}
-    .sidebar{width:100%;min-width:0;height:auto;position:relative;max-height:46vh;}
+    .sidebar{
+      width:100% !important;
+      min-width:0;
+      max-width:none;
+      height:68vh;
+      max-height:78vh;
+      min-height:360px;
+      position:relative;
+      resize:vertical;
+      overflow:auto;
+    }
+    .sidebar-resizer{display:none;}
+    .client-list{min-height:230px;}
     .main{padding:20px 16px calc(50px + var(--safe-bottom));max-width:100%;}
     .field-row{grid-template-columns:1fr;}
     .client-info-grid{grid-template-columns:repeat(2,1fr);}
@@ -629,7 +673,7 @@
         </svg>
         <div>
           <h1>Scheda Misurazioni</h1>
-          <div class="sub">Serramenti · Porte · Balconi · Avvolgibili</div>
+          <div class="sub">Serramenti · Porte · Balconi · Avvolgibili · Zanzariere · Tende</div>
         </div>
       </div>
     </div>
@@ -649,6 +693,7 @@
       <button class="btn btn-ghost btn-sm" id="btnImport" title="Ripristina da un file di backup">Importa backup</button>
       <input type="file" id="importFile" accept="application/json" style="display:none">
     </div>
+    <div class="sidebar-resizer" id="sidebarResizer" title="Trascina per allargare o stringere l'elenco clienti"></div>
   </aside>
 
   <main class="main" id="mainArea"></main>
@@ -733,6 +778,8 @@
           <option value="porta">Porta</option>
           <option value="balcone">Balcone</option>
           <option value="serranda">Avvolgibile</option>
+          <option value="zanzariera">Zanzariera</option>
+          <option value="tenda_oscurante">Tenda Oscurante</option>
         </select>
       </div>
       <div class="field">
@@ -813,6 +860,27 @@
           </div>
         </div>
       </div>
+      <div id="mZanzarieraFields" class="conditional-panel" style="display:none;">
+        <div class="field">
+          <label for="mZanzarieraTipo">Tipo zanzariera</label>
+          <select id="mZanzarieraTipo">
+            <option value="verticale">Verticale</option>
+            <option value="laterale">Laterale</option>
+          </select>
+          <div class="hint">Indica se la zanzariera è verticale oppure laterale.</div>
+        </div>
+      </div>
+      <div id="mTendaFields" class="conditional-panel" style="display:none;">
+        <div class="field">
+          <label for="mCavoPosizione">Posizione cavo</label>
+          <select id="mCavoPosizione">
+            <option value="">Non specificata</option>
+            <option value="destra">Destra</option>
+            <option value="sinistra">Sinistra</option>
+          </select>
+          <div class="hint">Dato opzionale: destra/sinistra guardando la tenda dall'interno della stanza.</div>
+        </div>
+      </div>
       <div class="field" id="mAperturaField">
         <label>Senso di apertura</label>
         <div class="seg-control">
@@ -866,24 +934,28 @@ let storageAvailable = true;
 let state = {
   clients: [],
   selectedClientId: null,
-  selectedCategory: null, // 'porta' | 'finestra' | 'balcone' | 'serranda' (Avvolgibile) | null
+  selectedCategory: null, // categoria selezionata oppure null
   search: '',
   currentApertura: ''
 };
 
 const TYPE_META = {
-  finestra: { label:'Serramento', plural:'Serramenti', color:'#2E5C8A' },
-  porta:    { label:'Porta',       plural:'Porte',       color:'#5B6B7A' },
-  balcone:  { label:'Balcone',     plural:'Balconi',     color:'#C1793C' },
-  serranda: { label:'Avvolgibile', plural:'Avvolgibili', color:'#4C7A5E' }
+  finestra:         { label:'Serramento',       plural:'Serramenti',       color:'#2E5C8A' },
+  porta:            { label:'Porta',            plural:'Porte',            color:'#5B6B7A' },
+  balcone:          { label:'Balcone',          plural:'Balconi',          color:'#C1793C' },
+  serranda:         { label:'Avvolgibile',      plural:'Avvolgibili',      color:'#4C7A5E' },
+  zanzariera:       { label:'Zanzariera',       plural:'Zanzariere',       color:'#7A6B4C' },
+  tenda_oscurante:  { label:'Tenda oscurante',  plural:'Tende Oscuranti',  color:'#6D5877' }
 };
-const CATEGORY_ORDER = ['porta','finestra','balcone','serranda'];
+const CATEGORY_ORDER = ['porta','finestra','balcone','serranda','zanzariera','tenda_oscurante'];
 
 const CATEGORY_ICONS = {
   porta: `<svg width="30" height="30" viewBox="0 0 30 30" fill="none"><rect x="7" y="3" width="16" height="24" rx="1" stroke="currentColor" stroke-width="1.6"/><circle cx="19.5" cy="15" r="1.1" fill="currentColor"/></svg>`,
   finestra: `<svg width="30" height="30" viewBox="0 0 30 30" fill="none"><rect x="4" y="4" width="22" height="22" rx="1" stroke="currentColor" stroke-width="1.6"/><path d="M15 4V26M4 15H26" stroke="currentColor" stroke-width="1.3"/></svg>`,
   balcone: `<svg width="30" height="30" viewBox="0 0 30 30" fill="none"><rect x="5" y="3" width="20" height="24" rx="1" stroke="currentColor" stroke-width="1.6"/><path d="M15 3V27" stroke="currentColor" stroke-width="1.3"/><circle cx="12" cy="15" r="1" fill="currentColor"/><circle cx="18" cy="15" r="1" fill="currentColor"/></svg>`,
-  serranda: `<svg width="30" height="30" viewBox="0 0 30 30" fill="none"><rect x="5" y="5" width="20" height="20" rx="1" stroke="currentColor" stroke-width="1.6"/><path d="M5 10H25M5 15H25M5 20H25" stroke="currentColor" stroke-width="1.2"/></svg>`
+  serranda: `<svg width="30" height="30" viewBox="0 0 30 30" fill="none"><rect x="5" y="5" width="20" height="20" rx="1" stroke="currentColor" stroke-width="1.6"/><path d="M5 10H25M5 15H25M5 20H25" stroke="currentColor" stroke-width="1.2"/></svg>`,
+  zanzariera: `<svg width="30" height="30" viewBox="0 0 30 30" fill="none"><rect x="4" y="5" width="22" height="20" rx="1" stroke="currentColor" stroke-width="1.6"/><path d="M8 5V25M12 5V25M16 5V25M20 5V25M24 5V25M4 10H26M4 15H26M4 20H26" stroke="currentColor" stroke-width=".75" opacity=".7"/></svg>`,
+  tenda_oscurante: `<svg width="30" height="30" viewBox="0 0 30 30" fill="none"><rect x="5" y="5" width="20" height="20" rx="1" stroke="currentColor" stroke-width="1.6"/><path d="M9 5V25M13 5V25M17 5V25M21 5V25" stroke="currentColor" stroke-width="1" opacity=".75"/><path d="M24 7V23" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`
 };
 
 function uid(){
@@ -966,6 +1038,12 @@ function measureDetailsText(m){
     if (m.balconeElemento) parts.push(`Elemento: ${balconeElementoLabel(m.balconeElemento)}`);
     if (m.balconeTipologia) parts.push(`Tipologia: ${m.balconeTipologia}`);
   }
+  if (m.tipo==='zanzariera' && m.zanzarieraTipo){
+    parts.push(`Tipo: ${zanzarieraTipoLabel(m.zanzarieraTipo)}`);
+  }
+  if (m.tipo==='tenda_oscurante' && m.cavoPosizione){
+    parts.push(`Cavo: ${cavoPosizioneLabel(m.cavoPosizione)} (vista dall'interno)`);
+  }
   return parts.join(' · ');
 }
 function escapeHtml(str){
@@ -976,6 +1054,19 @@ function aperturaLabel(v){
   if (v==='destra') return 'Destra';
   if (v==='sinistra') return 'Sinistra';
   return 'Non specificato';
+}
+function zanzarieraTipoLabel(v){
+  if (v==='laterale') return 'Laterale';
+  if (v==='verticale') return 'Verticale';
+  return '';
+}
+function cavoPosizioneLabel(v){
+  if (v==='destra') return 'Destra';
+  if (v==='sinistra') return 'Sinistra';
+  return '';
+}
+function usesApertura(tipo){
+  return ['porta','finestra','balcone'].includes(tipo);
 }
 
 /* ============================================================
@@ -1180,7 +1271,7 @@ function renderMeasureCard(client, m, roomName){
         <span><span class="dim-lbl">P</span><b>${fmtNum(m.profondita)}</b> mm</span>
       </div>
       ${details ? `<div class="m-detail">${escapeHtml(details)}</div>` : ''}
-      ${m.tipo!=='serranda' ? `<div class="m-apertura">Apertura: <b>${aperturaLabel(m.apertura)}</b></div>` : ''}
+      ${usesApertura(m.tipo) ? `<div class="m-apertura">Apertura: <b>${aperturaLabel(m.apertura)}</b></div>` : ''}
       ${cass ? `<div class="m-note"><b>Cassonetto:</b> ${escapeHtml(cass)}${cassNote ? `<br>${escapeHtml(cassNote)}` : ''}</div>` : ''}
       ${m.note ? `<div class="m-note">${escapeHtml(m.note)}</div>` : ''}
     </div>
@@ -1212,6 +1303,18 @@ function dimensionSVG(w, h, color, apertura, tipo){
       <line x1="${rx+4}" y1="${y1}" x2="${rx+rw-4}" y2="${y1}" stroke="${color}" stroke-width=".8" opacity=".45"/>
       <line x1="${rx+4}" y1="${y2}" x2="${rx+rw-4}" y2="${y2}" stroke="${color}" stroke-width=".8" opacity=".45"/>
       <line x1="${rx+4}" y1="${y3}" x2="${rx+rw-4}" y2="${y3}" stroke="${color}" stroke-width=".8" opacity=".45"/>`;
+  } else if (tipo==='zanzariera'){
+    openingMark = `
+      <line x1="${rx+rw*.25}" y1="${ry+4}" x2="${rx+rw*.25}" y2="${ry+rh-4}" stroke="${color}" stroke-width=".7" opacity=".45"/>
+      <line x1="${rx+rw*.50}" y1="${ry+4}" x2="${rx+rw*.50}" y2="${ry+rh-4}" stroke="${color}" stroke-width=".7" opacity=".45"/>
+      <line x1="${rx+rw*.75}" y1="${ry+4}" x2="${rx+rw*.75}" y2="${ry+rh-4}" stroke="${color}" stroke-width=".7" opacity=".45"/>
+      <line x1="${rx+4}" y1="${ry+rh*.33}" x2="${rx+rw-4}" y2="${ry+rh*.33}" stroke="${color}" stroke-width=".7" opacity=".45"/>
+      <line x1="${rx+4}" y1="${ry+rh*.66}" x2="${rx+rw-4}" y2="${ry+rh*.66}" stroke="${color}" stroke-width=".7" opacity=".45"/>`;
+  } else if (tipo==='tenda_oscurante'){
+    openingMark = `
+      <line x1="${rx+rw*.25}" y1="${ry+3}" x2="${rx+rw*.25}" y2="${ry+rh-3}" stroke="${color}" stroke-width="1" opacity=".55"/>
+      <line x1="${rx+rw*.50}" y1="${ry+3}" x2="${rx+rw*.50}" y2="${ry+rh-3}" stroke="${color}" stroke-width="1" opacity=".55"/>
+      <line x1="${rx+rw*.75}" y1="${ry+3}" x2="${rx+rw*.75}" y2="${ry+rh-3}" stroke="${color}" stroke-width="1" opacity=".55"/>`;
   } else if (apertura==='sinistra'){
     // Richiesto: apertura sinistra = |>|, bordi verticali + tratteggio a >
     openingMark = `<path d="M ${rx+5} ${ry+5} L ${rx+rw-5} ${ry+rh/2} L ${rx+5} ${ry+rh-5}" fill="none" stroke="${color}" stroke-width="1" stroke-dasharray="3,3" opacity=".85"/>`;
@@ -1402,19 +1505,22 @@ function onMeasureTypeChange(){
   const anteField = document.getElementById('mAnteField');
   const cassWrap = document.getElementById('mCassonettoWrap');
   const balconeFields = document.getElementById('mBalconeFields');
+  const zanzarieraFields = document.getElementById('mZanzarieraFields');
+  const tendaFields = document.getElementById('mTendaFields');
 
   anteField.style.display = tipo==='finestra' ? 'block' : 'none';
   cassWrap.style.display = tipo==='finestra' ? 'block' : 'none';
   balconeFields.style.display = tipo==='balcone' ? 'block' : 'none';
+  zanzarieraFields.style.display = tipo==='zanzariera' ? 'block' : 'none';
+  tendaFields.style.display = tipo==='tenda_oscurante' ? 'block' : 'none';
 
-  if (tipo==='serranda'){
+  if (!usesApertura(tipo)){
     field.style.display = 'none';
+    setApertura('');
   } else {
     field.style.display = 'block';
     if (tipo==='porta'){
       hint.textContent = "Vista entrando nella stanza (verso di apertura a spinta).";
-    } else if (tipo==='balcone'){
-      hint.textContent = "Vista dall'interno della stanza. Il disegno usa |>| per apertura sinistra e |<| per apertura destra.";
     } else {
       hint.textContent = "Vista dall'interno della stanza. Il disegno usa |>| per apertura sinistra e |<| per apertura destra.";
     }
@@ -1440,6 +1546,8 @@ function openMeasureModal(presetTipo, measureId){
   document.getElementById('mNumeroAnte').value = m && m.numeroAnte ? String(m.numeroAnte) : '1';
   document.getElementById('mBalconeElemento').value = m && m.balconeElemento ? m.balconeElemento : 'finestra';
   document.getElementById('mBalconeTipologia').value = m && m.balconeTipologia ? m.balconeTipologia : 'Vicentina';
+  document.getElementById('mZanzarieraTipo').value = m && m.zanzarieraTipo ? m.zanzarieraTipo : 'verticale';
+  document.getElementById('mCavoPosizione').value = m && m.cavoPosizione ? m.cavoPosizione : '';
   document.getElementById('mNotes').value = m ? (m.note||'') : '';
   document.getElementById('mNewRoomName').value = '';
 
@@ -1498,9 +1606,11 @@ document.getElementById('btnSaveMeasure').addEventListener('click', ()=>{
     profondita: readOptionalNumber('mDepth'),
     quantita,
     numeroAnte: tipo==='finestra' ? parseInt(document.getElementById('mNumeroAnte').value, 10) : null,
-    apertura: tipo==='serranda' ? '' : state.currentApertura,
+    apertura: usesApertura(tipo) ? state.currentApertura : '',
     balconeElemento: tipo==='balcone' ? document.getElementById('mBalconeElemento').value : null,
     balconeTipologia: tipo==='balcone' ? document.getElementById('mBalconeTipologia').value : null,
+    zanzarieraTipo: tipo==='zanzariera' ? document.getElementById('mZanzarieraTipo').value : null,
+    cavoPosizione: tipo==='tenda_oscurante' ? document.getElementById('mCavoPosizione').value : null,
     cassonetto: cassonettoPresente ? {
       presente: true,
       larghezza: readOptionalNumber('mCassWidth'),
@@ -1778,14 +1888,17 @@ function downloadClientPDF(clientId, tipoFiltro=null){
       byRoom[rid].forEach((m, idx)=>{
         const meta = TYPE_META[m.tipo] || TYPE_META.finestra;
         const qta = quantityVal(m);
-        const apertura = m.tipo !== 'serranda' ? aperturaLabel(m.apertura) : '-';
+        const apertura = usesApertura(m.tipo) ? aperturaLabel(m.apertura) : '';
         const details = measureDetailsText(m);
         const cass = cassonettoText(m.cassonetto);
         const cassNote = m.cassonetto && m.cassonetto.note ? ` - ${m.cassonetto.note}` : '';
+        const misuraLine = usesApertura(m.tipo)
+          ? `Misure: L ${fmtNum(m.larghezza)} mm - H ${fmtNum(m.altezza)} mm - P ${fmtNum(m.profondita)} mm - Apertura: ${apertura}`
+          : `Misure: L ${fmtNum(m.larghezza)} mm - H ${fmtNum(m.altezza)} mm - P ${fmtNum(m.profondita)} mm`;
 
         ensureSpace(70);
         addLine(`${idx+1}. ${meta.label} - Q.ta ${qta}`, 11, true, 0, 15);
-        addLine(`Misure: L ${fmtNum(m.larghezza)} mm - H ${fmtNum(m.altezza)} mm - P ${fmtNum(m.profondita)} mm - Apertura: ${apertura}`, 10, false, 12, 14);
+        addLine(misuraLine, 10, false, 12, 14);
         if (details) addLine(`Dettagli: ${details}`, 10, false, 12, 14);
         if (cass) addLine(`Cassonetto: ${cass}${cassNote}`, 10, false, 12, 14);
         if (m.note) addLine(`Note: ${m.note}`, 10, false, 12, 14);
@@ -1911,6 +2024,48 @@ document.getElementById('searchInput').addEventListener('input', (e)=>{
   renderClientList();
 });
 
+function setupResizableSidebar(){
+  const sidebar = document.querySelector('.sidebar');
+  const handle = document.getElementById('sidebarResizer');
+  if (!sidebar || !handle) return;
+
+  const savedWidth = parseInt(localStorage.getItem('infissi-sidebar-width') || '', 10);
+  if (savedWidth && window.innerWidth > 820){
+    sidebar.style.width = Math.min(Math.max(savedWidth, 300), 620) + 'px';
+  }
+
+  let startX = 0;
+  let startWidth = 0;
+
+  function onPointerMove(e){
+    const nextWidth = Math.min(Math.max(startWidth + (e.clientX - startX), 300), 620);
+    sidebar.style.width = nextWidth + 'px';
+  }
+
+  function onPointerUp(){
+    handle.classList.remove('dragging');
+    document.body.style.userSelect = '';
+    document.body.style.cursor = '';
+    const finalWidth = parseInt(sidebar.getBoundingClientRect().width, 10);
+    if (window.innerWidth > 820){
+      localStorage.setItem('infissi-sidebar-width', String(finalWidth));
+    }
+    window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('pointerup', onPointerUp);
+  }
+
+  handle.addEventListener('pointerdown', (e)=>{
+    if (window.innerWidth <= 820) return;
+    startX = e.clientX;
+    startWidth = sidebar.getBoundingClientRect().width;
+    handle.classList.add('dragging');
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+  });
+}
+
 document.querySelectorAll('.overlay').forEach(ov=>{
   ov.addEventListener('click', (e)=>{ if (e.target===ov) closeModal(ov.id); });
 });
@@ -1924,6 +2079,7 @@ document.addEventListener('keydown', (e)=>{
    INIT
    ============================================================ */
 setupIcons();
+setupResizableSidebar();
 loadData();
 </script>
 </body>
